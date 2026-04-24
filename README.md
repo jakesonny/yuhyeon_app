@@ -1,4 +1,4 @@
-# yuhyunMobile
+# yuhyeonApp
 
 유현건설 센서 모니터링 웹 프론트를 Flutter 모바일 목업으로 이식한 프로젝트입니다.
 
@@ -35,7 +35,7 @@ flutter test
 
 ### 1) Vercel 프로젝트 연결
 
-- Vercel에서 레포 연결 후 Root Directory를 `yuhyunMobile/app`으로 지정
+- Vercel에서 레포 연결 후 Root Directory를 `yuhyeonApp/app`으로 지정
 - Build Command: `flutter build web`
 - Output Directory: `build/web`
 
