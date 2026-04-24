@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/application/auth_controller.dart';
 import 'features/alarms/presentation/alarms_page.dart';
@@ -82,6 +83,19 @@ class YuhyunMobileApp extends ConsumerWidget {
       title: 'Yuhyun Mobile',
       theme: AppTheme.light(),
       routerConfig: router,
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+
+        return ColoredBox(
+          color: AppColors.surfacePage,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: ClipRect(child: child),
+            ),
+          ),
+        );
+      },
     );
   }
 }
