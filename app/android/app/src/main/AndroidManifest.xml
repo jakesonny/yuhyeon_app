@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="app"
+        android:label="유현 센서 모니터링"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

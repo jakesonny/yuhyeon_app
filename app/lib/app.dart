@@ -16,7 +16,8 @@ import 'features/sites/presentation/sites_page.dart';
 import 'features/users/presentation/users_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final isLoggedIn = ref.watch(authProvider);
+  final session = ref.watch(authProvider);
+  final isLoggedIn = session.isLoggedIn;
   NoTransitionPage<void> noTransition(Widget child, GoRouterState state) {
     return NoTransitionPage<void>(key: state.pageKey, child: child);
   }
@@ -26,8 +27,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final onLoginPage = state.matchedLocation == '/login';
       final onPublicQrPage = state.matchedLocation.startsWith('/qr/');
+      // 웹 동등: MultiMonitor는 사용자 관리만 막고, 현장은 읽기 전용으로 허용한다.
+      final isRestrictedForMultiMonitor =
+          state.matchedLocation.startsWith('/users');
       if (!isLoggedIn && !onLoginPage && !onPublicQrPage) return '/login';
       if (isLoggedIn && onLoginPage) return '/dashboard';
+      if (isLoggedIn && !session.canManage && isRestrictedForMultiMonitor) {
+        return '/dashboard';
+      }
       return null;
     },
     routes: [
@@ -45,17 +52,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/sensors/:id',
-        pageBuilder: (context, state) =>
-            noTransition(SensorDetailPage(sensorId: state.pathParameters['id']!), state),
+        pageBuilder: (context, state) {
+          final q = state.uri.queryParameters;
+          return noTransition(
+            SensorDetailPage(
+              sensorId: state.pathParameters['id']!,
+              initialRangeDays: int.tryParse(q['range'] ?? ''),
+              initialChartMode: q['mode'],
+              initialSelectedHour: int.tryParse(q['hour'] ?? ''),
+              initialDepthLabel: q['depth'],
+            ),
+            state,
+          );
+        },
       ),
       GoRoute(
         path: '/alarms',
         pageBuilder: (context, state) => noTransition(const AlarmsPage(), state),
       ),
-      GoRoute(
-        path: '/users',
-        pageBuilder: (context, state) => noTransition(const UsersPage(), state),
-      ),
+      if (session.canManage)
+        GoRoute(
+          path: '/users',
+          pageBuilder: (context, state) => noTransition(const UsersPage(), state),
+        ),
       GoRoute(
         path: '/files',
         pageBuilder: (context, state) => noTransition(const FilesPage(), state),
@@ -73,11 +92,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class YuhyunMobileApp extends ConsumerWidget {
+class YuhyunMobileApp extends ConsumerStatefulWidget {
   const YuhyunMobileApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<YuhyunMobileApp> createState() => _YuhyunMobileAppState();
+}
+
+class _YuhyunMobileAppState extends ConsumerState<YuhyunMobileApp> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(authProvider.notifier).restoreSession());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
       title: 'Yuhyun Mobile',
